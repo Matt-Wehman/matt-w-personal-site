@@ -12,17 +12,16 @@ function Home() {
     useEffect(() => {
         if (observedElementRef.current) {
             const observer = new ResizeObserver((entries) => {
-                for (const entry of entries) {
-                    const { width, height } = entry.contentRect;
-                    const aspectRatio = width / height;
-                    const baseHeight = 1440;
-                    const baseWidth = baseHeight * aspectRatio;
-                    setDimensions({
-                        width: baseWidth,
-                        height: baseHeight,
-                    });
-                    setViewBox(`0 0 ${baseWidth} ${baseHeight}`);
-                }
+                requestAnimationFrame(() => {
+                    for (const entry of entries) {
+                        const { width, height } = entry.contentRect;
+                        const aspectRatio = width / height;
+                        const baseHeight = 1440;
+                        const baseWidth = baseHeight * aspectRatio;
+                        setDimensions({ width: baseWidth, height: baseHeight });
+                        setViewBox(`0 0 ${baseWidth} ${baseHeight}`);
+                    }
+                });
             });
 
             observer.observe(observedElementRef.current);
@@ -38,7 +37,12 @@ function Home() {
     return (
         <>
             <motion.div style={{ width: '100vw', height: '100vh' }}>
-                <motion.p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-[22rem] tracking-wide text-white text-center w-full pointer-events-none text-shadow-lg/30" initial={{ opacity: 0, y: -100 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: "easeInOut", delay: 0.5 }}>
+                <motion.p
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-bold sm:text-[6rem] md:text-[9rem] lg:text-[10rem] xl:text-[15rem] 2xl:text-[21rem] tracking-wide text-white text-center w-full pointer-events-none text-shadow-lg/30"
+                    initial={{ opacity: 0, y: -100 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 1, ease: "easeInOut", delay: 0.5 }}
+                >
                     Matthew Wehman
                 </motion.p>
                 <motion.svg
@@ -47,14 +51,12 @@ function Home() {
                         height: '100%',
                         width: '100%',
                     }}
-                    preserveAspectRatio="xMidYMid meet"
+                    preserveAspectRatio="none"
                     ref={observedElementRef}
                 >
-                    <>
-                        {TRANSIT_PATHS.map((path, index) => (
-                            <TransitPath key={index} {...path} dimensions={dimensions} busDelay={index * 1000} reverseBus={index % 2 === 0 ? true : false} />
-                        ))}
-                    </>
+                    {TRANSIT_PATHS.map((path, index) => (
+                        <TransitPath key={index} {...path} dimensions={dimensions} busDelay={index * 1000} reverseBus={index % 2 === 0 ? true : false} />
+                    ))}
                 </motion.svg>
             </motion.div>
         </>

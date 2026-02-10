@@ -28,6 +28,7 @@ const TransitPath = ({ pathString, color, props, dimensions, busDelay, reverseBu
 
     const pathRef = useRef<SVGPathElement>(null);
 
+
     const { percentages, pathType } = useMemo(() => { return { percentages: getPathPercentages(pathString), pathType: (pathString[0] === "M" || pathString[0] === "m") ? pathString[0] : 'm' } }, [pathString]);
 
     const mergedProps = useMemo(() => {
@@ -40,21 +41,25 @@ const TransitPath = ({ pathString, color, props, dimensions, busDelay, reverseBu
     const transitPathOutlineStrokeWidth = useMemo(() => { return Number(mergedProps.strokeWidth) + TRANSIT_PATH_OUTLINE_WIDTH }, [mergedProps.strokeWidth]);
 
     const computedPathString = useMemo(() => {
-        return `${pathType} ${percentages.map(percentage => `${percentage.x * dimensions.width},${percentage.y * dimensions.height} `)}`;
+        const points = percentages.map(p =>
+            `${Math.round(p.x * dimensions.width * 100) / 100},${Math.round(p.y * dimensions.height * 100) / 100}`
+        ).join(' ');
+        return `${pathType} ${points}`;
     }, [percentages, dimensions.width, dimensions.height, pathType]);
 
     return (
         <>
             <filter id={`blur-filter-${color}`} filterUnits="userSpaceOnUse" x="0" y="0" width={dimensions.width} height={dimensions.height}>
-                <feGaussianBlur in="SourceGraphic" stdDeviation="4" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="5" />
             </filter>
+            {/* Outline */}
             <motion.path
                 d={computedPathString}
                 {...mergedProps}
                 stroke={"var(--background)"}
                 strokeWidth={transitPathOutlineStrokeWidth}
-
             />
+            {/* Path */}
             <motion.path
                 d={computedPathString}
                 stroke={`var(${color})`}
@@ -62,6 +67,7 @@ const TransitPath = ({ pathString, color, props, dimensions, busDelay, reverseBu
                 opacity={1}
                 ref={pathRef}
             />
+            {/* Blur and fade effect */}
             <motion.path
                 {...mergedProps}
                 d={computedPathString}
@@ -73,7 +79,6 @@ const TransitPath = ({ pathString, color, props, dimensions, busDelay, reverseBu
                     opacity: { duration: 1, ease: "easeInOut", delay: 0.5 },
                 }}
                 filter={`url(#blur-filter-${color})`}
-
             />
             <Bus transitPathRef={pathRef} color={color} busDelay={busDelay} reverse={reverseBus} />
         </>
