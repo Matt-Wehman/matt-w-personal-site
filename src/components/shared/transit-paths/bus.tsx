@@ -1,5 +1,5 @@
-import { animate, motion, useMotionValue, useTransform } from "motion/react";
-import { useEffect, useState } from "react";
+import { animate, motion, useMotionValue } from "motion/react";
+import { useEffect, useMemo, useState } from "react";
 
 interface BusProps {
     transitPathRef: React.RefObject<SVGPathElement | null>;
@@ -11,6 +11,9 @@ interface BusProps {
 const Bus = ({ transitPathRef, color, busDelay, reverse }: BusProps) => {
     const pathProgress = useMotionValue(reverse ? 1 : 0);
     const [moving, setMoving] = useState(false);
+    const busX = useMotionValue(0);
+    const busY = useMotionValue(0);
+    const busAngle = useMotionValue(0);
 
     useEffect(() => {
         if (!transitPathRef.current) return;
@@ -27,42 +30,32 @@ const Bus = ({ transitPathRef, color, busDelay, reverse }: BusProps) => {
         return () => clearTimeout(timeout);
     }, [transitPathRef, pathProgress, busDelay, reverse]);
 
-    const busX = useTransform(pathProgress, (progress) => {
-        if (!transitPathRef.current) return 0;
-        const path = transitPathRef.current;
-        const pathLength = path.getTotalLength();
-        const point = path.getPointAtLength(progress * pathLength);
-        return point.x;
-    });
+    useEffect(() => {
+        const unsubscribe = pathProgress.on("change", (progress) => {
+            const path = transitPathRef.current;
+            if (!path) return;
 
-    const busAngle = useTransform(pathProgress, (progress) => {
-        if (!transitPathRef.current) return 0;
-        const path = transitPathRef.current;
-        const pathLength = path.getTotalLength();
-        const currentPoint = path.getPointAtLength(progress * pathLength);
-        const nextPoint = path.getPointAtLength(Math.min(progress + 0.02, 1) * pathLength);
-        const angleRad = Math.atan2(
-            nextPoint.y - currentPoint.y,
-            nextPoint.x - currentPoint.x
-        );
-        const angleDeg = (angleRad * 180) / Math.PI;
-        const newAngle = angleDeg > 2 || angleDeg < -2 ? angleDeg : 0;
-        return reverse ? newAngle + -180 : newAngle;
-    });
+            const pathLength = path.getTotalLength();
+            const currentPoint = path.getPointAtLength(progress * pathLength);
+            const nextPoint = path.getPointAtLength(Math.min(progress + 0.03, 1) * pathLength);
 
-    const busY = useTransform(pathProgress, (progress) => {
-        if (!transitPathRef.current) return 0;
-        const path = transitPathRef.current;
-        const pathLength = path.getTotalLength();
-        const point = path.getPointAtLength(progress * pathLength);
-        return point.y;
-    });
+            busX.set(currentPoint.x);
+            busY.set(currentPoint.y);
 
-    return (
-        <motion.g
-            style={{ x: busX, y: busY, rotate: busAngle }}
-            opacity={moving ? 1 : 0}
-        >
+            const angleRad = Math.atan2(
+                nextPoint.y - currentPoint.y,
+                nextPoint.x - currentPoint.x
+            );
+            const angleDeg = (angleRad * 180) / Math.PI;
+            busAngle.set(reverse ? angleDeg - 180 : angleDeg);
+        });
+
+        return unsubscribe;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [transitPathRef, pathProgress, reverse]);
+
+    const useMemoBus = useMemo(() => {
+        return (
             <g transform="scale(4) translate(-15, -7.5)">
                 <motion.path
                     d="M 5.8586133,1.1387396
@@ -113,6 +106,14 @@ const Bus = ({ transitPathRef, color, busDelay, reverse }: BusProps) => {
                     fillOpacity={0.75}
                 />
             </g>
+        );
+    }, [color]);
+    return (
+        <motion.g
+            style={{ x: busX, y: busY, rotate: busAngle }}
+            opacity={moving ? 1 : 0}
+        >
+            {useMemoBus}
         </motion.g>
     );
 };

@@ -2,12 +2,12 @@ import type { Path } from "@/types/path";
 
 // Strings from inkscape
 const GREEN_TRANSIT_PATH: Path = {
-  pathString: "M 225.04426,1439.6712 225.00495,554.9727 804.46576,-38.39099",
+  pathString: "M 2249.8523,1499.343 2248.2521,572.24776 1589.8195,-85.280451",
   color: "--color-green-400",
 };
 
 const BLUE_TRANSIT_PATH: Path = {
-  pathString: "M 2229.955,1440.2611 2230.1029,-0.0771208",
+  pathString: "M 133.61718,1521.0981 133.91932,-40.796916",
   color: "--color-blue-400",
 };
 
@@ -26,16 +26,17 @@ const YELLOW_TRANSIT_PATH: Path = {
   color: "--color-yellow-400",
 };
 
-const RED_TRANSIT_PATH: Path = {
-  pathString: "m 1140.0747,-68.860203 -0.015,873.762223 521.2458,688.62358",
-  color: "--color-red-400",
-};
+// const RED_TRANSIT_PATH: Path = {
+//   pathString: "m 1140.0747,-68.860203 -0.015,873.762223 521.2458,688.62358",
+//   color: "--color-red-400",
+// };
+
+export const BLUE_PATH = BLUE_TRANSIT_PATH;
 
 export const TRANSIT_PATHS = [
   ORANGE_TRANSIT_PATH,
   PURPLE_TRANSIT_PATH,
   YELLOW_TRANSIT_PATH,
-  RED_TRANSIT_PATH,
-  BLUE_TRANSIT_PATH,
+  //RED_TRANSIT_PATH,
   GREEN_TRANSIT_PATH,
 ];

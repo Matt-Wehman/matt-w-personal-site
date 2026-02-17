@@ -49,6 +49,10 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+html {
+  scroll-snap-type: y mandatory;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -64,6 +68,8 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
+  scroll-snap-type: y mandatory;
 }
 
 h1 {

@@ -28,7 +28,6 @@ const TransitPath = ({ pathString, color, props, dimensions, busDelay, reverseBu
 
     const pathRef = useRef<SVGPathElement>(null);
 
-
     const { percentages, pathType } = useMemo(() => { return { percentages: getPathPercentages(pathString), pathType: (pathString[0] === "M" || pathString[0] === "m") ? pathString[0] : 'm' } }, [pathString]);
 
     const mergedProps = useMemo(() => {
@@ -41,45 +40,53 @@ const TransitPath = ({ pathString, color, props, dimensions, busDelay, reverseBu
     const transitPathOutlineStrokeWidth = useMemo(() => { return Number(mergedProps.strokeWidth) + TRANSIT_PATH_OUTLINE_WIDTH }, [mergedProps.strokeWidth]);
 
     const computedPathString = useMemo(() => {
-        const points = percentages.map(p =>
-            `${Math.round(p.x * dimensions.width * 100) / 100},${Math.round(p.y * dimensions.height * 100) / 100}`
-        ).join(' ');
-        return `${pathType} ${points}`;
+        return `${pathType} ${percentages.map(percentage => `${percentage.x * dimensions.width},${percentage.y * dimensions.height} `)}`;
     }, [percentages, dimensions.width, dimensions.height, pathType]);
+
+
+    const pathElement = useMemo(() => {
+        return (
+            <>
+
+                {/* Outline */}
+                <motion.path
+                    d={computedPathString}
+                    {...mergedProps}
+                    stroke={"var(--background)"}
+                    strokeWidth={transitPathOutlineStrokeWidth}
+                />
+                {/* Path */}
+                <motion.path
+                    d={computedPathString}
+                    stroke={`var(${color})`}
+                    {...mergedProps}
+                    opacity={1}
+                    ref={pathRef}
+                />
+                {/* Fade-in and filter effect */}
+                <motion.path
+                    {...mergedProps}
+                    d={computedPathString}
+                    stroke={"#000000"}
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 0.7 }}
+                    transition={{
+                        pathLength: { duration: 1, ease: "easeInOut" },
+                        opacity: { duration: 1, ease: "easeInOut", delay: 0.5 },
+                    }}
+                    filter={`url(#blur-filter-${color})`}
+                />
+            </>
+        )
+    }, [computedPathString, mergedProps, color, transitPathOutlineStrokeWidth]);
+
 
     return (
         <>
             <filter id={`blur-filter-${color}`} filterUnits="userSpaceOnUse" x="0" y="0" width={dimensions.width} height={dimensions.height}>
                 <feGaussianBlur in="SourceGraphic" stdDeviation="5" />
             </filter>
-            {/* Outline */}
-            <motion.path
-                d={computedPathString}
-                {...mergedProps}
-                stroke={"var(--background)"}
-                strokeWidth={transitPathOutlineStrokeWidth}
-            />
-            {/* Path */}
-            <motion.path
-                d={computedPathString}
-                stroke={`var(${color})`}
-                {...mergedProps}
-                opacity={1}
-                ref={pathRef}
-            />
-            {/* Blur and fade effect */}
-            <motion.path
-                {...mergedProps}
-                d={computedPathString}
-                stroke={"#000000"}
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 0.7 }}
-                transition={{
-                    pathLength: { duration: 1, ease: "easeInOut" },
-                    opacity: { duration: 1, ease: "easeInOut", delay: 0.5 },
-                }}
-                filter={`url(#blur-filter-${color})`}
-            />
+            {pathElement}
             <Bus transitPathRef={pathRef} color={color} busDelay={busDelay} reverse={reverseBus} />
         </>
 
